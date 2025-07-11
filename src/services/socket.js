@@ -1,3 +1,4 @@
+// services/socket.js
 import { io } from 'socket.io-client';
 
 const socket = io('https://project-quiz-socket.onrender.com', {
@@ -7,3 +8,4 @@ const socket = io('https://project-quiz-socket.onrender.com', {
 
 
 export default socket;
+
