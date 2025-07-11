@@ -7,79 +7,44 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Load user profile on app mount
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return setLoading(false);
+
     const fetchProfile = async () => {
       try {
-        console.log("🔄 Fetching profile...");
-        const response = await api.get("/auth/profile");
-        console.log("✅ Profile fetched:", response.data);
-        setUser(response.data);
+        const res = await api.get("/auth/profile");
+        setUser(res.data);
       } catch (err) {
-        console.error("❌ Failed to fetch profile:", err.message);
-        console.log("🔎 Cookies?", document.cookie); // This won’t show HttpOnly cookie but may help
         setUser(null);
+        localStorage.removeItem("token");
       } finally {
         setLoading(false);
       }
     };
+
     fetchProfile();
   }, []);
-  
 
-  const login = async (username, password) => {
-    try {
-      console.log("🔐 Sending login request:", { username, password });
-      const loginRes = await api.post("/auth/login", {
-        identifier: username,
-        password,
-      });
-      console.log("✅ Login response:", loginRes);
+  const login = async (identifier, password) => {
+    const res = await api.post("/auth/login", { identifier, password });
+    const token = res.data.token;
+    localStorage.setItem("token", token);
 
-      const profileRes = await api.get("/auth/profile");
-      console.log("✅ Profile response:", profileRes.data);
-      setUser(profileRes.data);
-    } catch (err) {
-      console.error("❌ Login failed:", err.message);
-      if (err.response) {
-        console.error(
-          "📦 Backend response:",
-          err.response.status,
-          err.response.data
-        );
-      } else {
-        console.error("❌ Unknown error:", err);
-      }
-      setUser(null);
-      throw new Error("Login failed. Please check your credentials.");
-    }
+    const profile = await api.get("/auth/profile");
+    setUser(profile.data);
   };
-      
 
   const logout = async () => {
-    try {
-      console.log("🚪 Logging out...");
-      await api.post("/auth/logout");
-      setUser(null);
-      localStorage.removeItem("roomId");
-      localStorage.removeItem("username");
-      console.log("✅ Logout successful");
-    } catch (err) {
-      console.error("❌ Logout failed:", err.message);
-      throw new Error("Logout failed. Please try again.");
-    }
+    localStorage.removeItem("token");
+    localStorage.removeItem("roomId");
+    localStorage.removeItem("username");
+    setUser(null);
   };
 
   const register = async (username, email, password) => {
-    try {
-      console.log("📝 Attempting registration:", { username, email });
-      await api.post("/auth/register", { username, email, password });
-      console.log("✅ Registration successful. Logging in...");
-      await login(username, password);
-    } catch (err) {
-      console.error("❌ Registration failed:", err.message);
-      throw new Error("Registration failed. Try different credentials.");
-    }
+    await api.post("/auth/register", { username, email, password });
+    await login(username, password);
   };
 
   return (
