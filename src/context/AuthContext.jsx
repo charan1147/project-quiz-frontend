@@ -29,19 +29,32 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
-      console.log("🔐 Attempting login for:", username);
-      await api.post("/auth/login", { identifier: username, password }); // ✅ FIXED
-      console.log("✅ Login successful. Fetching profile...");
-      const response = await api.get("/auth/profile");
-      console.log("✅ Profile after login:", response.data);
-      setUser(response.data);
+      console.log("🔐 Sending login request:", { username, password });
+      const loginRes = await api.post("/auth/login", {
+        identifier: username,
+        password,
+      });
+      console.log("✅ Login response:", loginRes);
+
+      const profileRes = await api.get("/auth/profile");
+      console.log("✅ Profile response:", profileRes.data);
+      setUser(profileRes.data);
     } catch (err) {
       console.error("❌ Login failed:", err.message);
+      if (err.response) {
+        console.error(
+          "📦 Backend response:",
+          err.response.status,
+          err.response.data
+        );
+      } else {
+        console.error("❌ Unknown error:", err);
+      }
       setUser(null);
       throw new Error("Login failed. Please check your credentials.");
     }
   };
-  
+      
 
   const logout = async () => {
     try {
