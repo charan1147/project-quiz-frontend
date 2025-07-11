@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: 'https://project-quiz-backend-21.onrender.com/api',
+  baseURL: 'https://project-quiz-backend-22.onrender.com/api',
   withCredentials: true, 
 });
 
