@@ -1,0 +1,6 @@
+[[redirects]]
+  from = "/api/*"
+  to = "https://project-quiz-backend-27.onrender.com/api/:splat"
+  status = 200
+  force = true
+  headers = { Access-Control-Allow-Origin = "*", Access-Control-Allow-Credentials = "true" }
