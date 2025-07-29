@@ -8,23 +8,25 @@ function Results() {
   const location = useLocation();
 
   useEffect(() => {
-    setScores(location.state?.scores || {});
-    setPlayers(location.state?.players || []);
+    const stateScores = location.state?.scores || {};
+    const statePlayers = location.state?.players || [];
+    setScores(stateScores);
+    setPlayers(statePlayers);
   }, [location]);
 
+  const goBack = () => navigate("/quiz");
+
   return (
-    <div className="container mt-4">
-      <h2 className="mb-3">🏆 Quiz Results</h2>
-      <ul className="list-group mb-3">
+    <div className="container">
+      <h2>🏆 Quiz Results</h2>
+      <ul>
         {Object.entries(scores).map(([username, score]) => (
-          <li key={username} className="list-group-item">
+          <li key={username}>
             {username}: {score} points
           </li>
         ))}
       </ul>
-      <button className="btn btn-primary" onClick={() => navigate("/quiz")}>
-        🔁 Back to Quiz
-      </button>
+      <button onClick={goBack}>🔁 Back to Quiz</button>
     </div>
   );
 }

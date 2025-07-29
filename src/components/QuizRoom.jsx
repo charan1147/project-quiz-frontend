@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 function QuizRoom() {
   const { user } = useContext(AuthContext);
   const navigate = useNavigate();
+
   const [roomId, setRoomId] = useState(localStorage.getItem("roomId") || "");
   const [players, setPlayers] = useState([]);
   const [question, setQuestion] = useState(null);
@@ -20,16 +21,21 @@ function QuizRoom() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [quizStarted, setQuizStarted] = useState(false);
+
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
+
   const inputRef = useRef(null);
   const chatEndRef = useRef(null);
+
   const shuffledAnswers = useMemo(() => question?.options || [], [question]);
 
+  // Auto scroll chat
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Join or rejoin room
   useEffect(() => {
     if (!user) return navigate("/login");
     if (!roomId) return;
@@ -38,14 +44,20 @@ function QuizRoom() {
       socket.emit("rejoinRoom", { roomId, username: user.username });
     };
 
-    if (socket.connected) handleConnect();
-    else socket.once("connect", handleConnect);
+    if (socket.connected) {
+      handleConnect();
+    } else {
+      socket.once("connect", handleConnect);
+    }
 
     socket.on("playerUpdate", (data) => setPlayers(data.players));
     socket.on("scoreUpdate", setScores);
-    socket.on("receiveMessage", (msg) =>
-      setMessages((prev) => (Array.isArray(msg) ? msg : [...prev, msg]))
-    );
+    socket.on("receiveMessage", (msgOrList) => {
+      setMessages((prev) =>
+        Array.isArray(msgOrList) ? msgOrList : [...prev, msgOrList]
+      );
+    });
+
     socket.on("startQuiz", (data) => {
       setQuizStarted(true);
       setQuestion(data.question);
@@ -56,6 +68,7 @@ function QuizRoom() {
       setAnswered(false);
       setAnswerFeedback("");
     });
+
     socket.on("timerUpdate", (data) => setTimeLeft(data.timeLeft));
     socket.on("quizEnd", (data) => {
       localStorage.removeItem("roomId");
@@ -93,14 +106,16 @@ function QuizRoom() {
   const handleAnswerSubmit = () => {
     const timeTaken = (15 - timeLeft) * 1000;
     socket.emit("submitAnswer", { roomId, answer, timeTaken });
+
     const correct = question.correct_answer.trim().toLowerCase();
     const selected = answer.trim().toLowerCase();
+
     setCorrectAnswer(question.correct_answer);
     setAnswered(true);
     setAnswerFeedback(
       selected === correct
-        ? " Correct!"
-        : ` Wrong! Correct: ${question.correct_answer}`
+        ? "✅ Correct!"
+        : `❌ Wrong! Correct: ${question.correct_answer}`
     );
     setAnswer("");
   };
@@ -115,37 +130,25 @@ function QuizRoom() {
 
   if (!quizStarted) {
     return (
-      <div className="container mt-4">
-        <h2 className="mb-3">Quiz Room</h2>
+      <div className="container">
+        <h2>Quiz Room</h2>
         <input
-          className="form-control mb-2"
           value={roomId}
           onChange={(e) => setRoomId(e.target.value)}
           placeholder="Enter Room ID"
         />
-        <div className="d-flex gap-2 mb-3">
-          <button className="btn btn-primary" onClick={handleJoin}>
-            Join Room
-          </button>
-          <button className="btn btn-success" onClick={handleCreateRoom}>
-            Create Room
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={() => navigator.clipboard.writeText(roomId)}
-          >
-            Copy Room ID
-          </button>
-        </div>
+        <button onClick={handleJoin}>Join Room</button>
+        <button onClick={handleCreateRoom}>Create Room</button>
+        <button onClick={() => navigator.clipboard.writeText(roomId)}>
+          Copy Room ID
+        </button>
         {players.length > 0 && (
           <>
             <p>
               <strong>Players:</strong>{" "}
               {players.map((p) => p.username).join(", ")}
             </p>
-            <button className="btn btn-primary" onClick={handleStartQuiz}>
-              Start Quiz
-            </button>
+            <button onClick={handleStartQuiz}>Start Quiz</button>
           </>
         )}
       </div>
@@ -153,70 +156,67 @@ function QuizRoom() {
   }
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-3">Quiz In Progress</h2>
-      <p>
+    <div className="container">
+      <h2>Quiz In Progress</h2>
+      <div>
         <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
-      </p>
-      <p>
+      </div>
+      <div>
         <strong>Time Left:</strong> {timeLeft}s
-      </p>
-      <p>
+      </div>
+      <div>
         <strong>Scores:</strong>{" "}
         {Object.entries(scores)
           .map(([u, s]) => `${u}: ${s}`)
           .join(", ")}
-      </p>
+      </div>
       <p>
         <strong>
           Q{currentQuestion}/{totalQuestions}:
         </strong>{" "}
         {question?.question}
       </p>
+
       {shuffledAnswers.map((ans, i) => (
         <button
           key={i}
-          className={`btn btn-outline-primary w-100 mb-2 ${
-            answer === ans ? "active" : ""
-          }`}
           onClick={() => setAnswer(ans)}
           disabled={answered}
+          style={{
+            backgroundColor: answer === ans ? "#add8e6" : "",
+            marginBottom: "5px",
+            display: "block",
+            width: "100%",
+          }}
         >
           {ans}
         </button>
       ))}
-      <button
-        className="btn btn-primary mt-2"
-        onClick={handleAnswerSubmit}
-        disabled={!answer || answered}
-      >
+
+      <button onClick={handleAnswerSubmit} disabled={!answer || answered}>
         Submit Answer
       </button>
-      {answerFeedback && <p className="mt-2">{answerFeedback}</p>}
-      <div className="mt-4">
+
+      {answerFeedback && <p>{answerFeedback}</p>}
+
+      <div>
         <h3>Chat</h3>
-        <ul
-          className="list-group mb-3"
-          style={{ maxHeight: "200px", overflowY: "auto" }}
-        >
+        <ul>
           {messages.map((msg, i) => (
-            <li key={i} className="list-group-item">
+            <li key={i}>
               <strong>{msg.username}</strong>: {msg.message}{" "}
               <small>{new Date(msg.timestamp).toLocaleTimeString()}</small>
             </li>
           ))}
           <div ref={chatEndRef} />
         </ul>
-        <form onSubmit={sendMessage} className="d-flex gap-2">
+        <form onSubmit={sendMessage}>
           <input
             ref={inputRef}
-            className="form-control"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
           />
-          <button className="btn btn-primary" type="submit">
-            Send
-          </button>
+          <button type="submit">Send</button>
         </form>
       </div>
     </div>

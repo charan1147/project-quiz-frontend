@@ -13,57 +13,45 @@ import Profile from "./components/Profile";
 import QuizRoom from "./components/QuizRoom";
 import Results from "./components/Results";
 import ProtectedRoute from "./components/ProtectedRoute";
+import "./App.css";
 
 function App() {
   const { user, logout, loading } = useContext(AuthContext);
-  if (loading) return <div className="container mt-4">Loading...</div>;
+  if (loading) return <div>Loading...</div>;
 
   return (
     <Router>
       <div className="App">
-        <nav className="navbar navbar-expand-lg navbar-light bg-light mb-4">
-          <div className="container">
-            <ul className="navbar-nav">
-              {!user ? (
-                <>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/login">
-                      Login
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/register">
-                      Register
-                    </Link>
-                  </li>
-                </>
-              ) : (
-                <>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/profile">
-                      Profile
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/quiz">
-                      Join Quiz
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <Link className="nav-link" to="/results">
-                      Results
-                    </Link>
-                  </li>
-                  <li className="nav-item">
-                    <button className="btn btn-link nav-link" onClick={logout}>
-                      Logout
-                    </button>
-                  </li>
-                </>
-              )}
-            </ul>
-          </div>
+        <nav>
+          <ul>
+            {!user ? (
+              <>
+                <li>
+                  <Link to="/login">Login</Link>
+                </li>
+                <li>
+                  <Link to="/register">Register</Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to="/profile">Profile</Link>
+                </li>
+                <li>
+                  <Link to="/quiz">Join Quiz</Link>
+                </li>
+                <li>
+                  <Link to="/results">Results</Link>
+                </li>
+                <li>
+                  <button onClick={logout}>Logout</button>
+                </li>
+              </>
+            )}
+          </ul>
         </nav>
+
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />

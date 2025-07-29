@@ -1,21 +1,23 @@
+
+
 import React, { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 function Profile() {
   const { user, loading } = useContext(AuthContext);
 
-  if (loading)
-    return <div className="container mt-4"> Loading profile...</div>;
+  if (loading) return <div className="container">🔄 Loading profile...</div>;
   if (!user)
     return (
-      <div className="container mt-4">
-         Please log in to view your profile.
-      </div>
+      <div className="container">🚫 Please log in to view your profile.</div>
     );
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-3">👤 Profile</h2>
+    <div
+      className="container"
+      style={{ maxWidth: "400px", margin: "2rem auto" }}
+    >
+      <h2>👤 Profile</h2>
       <p>
         <strong>Username:</strong> {user.username}
       </p>

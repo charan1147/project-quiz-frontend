@@ -7,6 +7,7 @@ function Login() {
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
@@ -14,49 +15,43 @@ function Login() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
+
+    console.log("🔐 Attempting login with:", identifier);
     try {
       await login(identifier, password);
+      console.log("✅ Login successful");
       navigate("/quiz");
-    } catch {
-      setErrorMsg("Login failed. Please try again.");
+    } catch (error) {
+      console.error("❌ Login error:", error.message);
+      setErrorMsg(error.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center ">
-      <div className="col-md-6">
-        <h2 className="mb-3 text-center">Login</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className="form-control mb-2"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-            placeholder="Username or Email"
-            required
-          />
-          <input
-            type="password"
-            className="form-control mb-2"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            required
-          />
-          <button
-            className="btn btn-primary w-100"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Logging in..." : "Login"}
-          </button>
-          {errorMsg && (
-            <p className="text-danger mt-2 text-center">{errorMsg}</p>
-          )}
-        </form>
-      </div>
+    <div className="container">
+      <h2>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          placeholder="Username or Email"
+          required
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+        {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+      </form>
     </div>
   );
 }
