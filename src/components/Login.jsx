@@ -30,7 +30,6 @@ function Login() {
     <div className="container d-flex justify-content-center align-items-center">
       <div
         className="card p-4 shadow"
-        style={{ maxWidth: "400px", width: "100%" }}
       >
         <h2 className="text-center mb-4"> Login</h2>
         <form onSubmit={handleSubmit}>

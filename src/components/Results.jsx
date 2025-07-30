@@ -20,7 +20,6 @@ function Results() {
     <div className="container d-flex justify-content-center align-items-center vh-100">
       <div
         className="card shadow p-4"
-        style={{ maxWidth: "500px", width: "100%" }}
       >
         <h2 className="text-center mb-4"> Quiz Results</h2>
         {players.length > 0 ? (

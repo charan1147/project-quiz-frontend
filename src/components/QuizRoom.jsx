@@ -118,7 +118,7 @@ function QuizRoom() {
   if (!quiz.started) {
     return (
       <div className="container py-5">
-        <h2 className="mb-4">🎮 Quiz Room</h2>
+        <h2 className="mb-4"> Quiz Room</h2>
         <input
           className="form-control mb-3"
           value={roomId}
@@ -156,7 +156,7 @@ function QuizRoom() {
 
   return (
     <div className="container py-5">
-      <h2 className="mb-4">🧠 Quiz In Progress</h2>
+      <h2 className="mb-4"> Quiz In Progress</h2>
       <p>
         <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
       </p>
