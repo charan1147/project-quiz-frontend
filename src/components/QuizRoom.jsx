@@ -100,8 +100,8 @@ function QuizRoom() {
       quiz.question.correct_answer.trim().toLowerCase();
     setFeedback(
       isCorrect
-        ? "✅ Correct!"
-        : `❌ Wrong! Correct: ${quiz.question.correct_answer}`
+        ? " Correct!"
+        : `Wrong! Correct: ${quiz.question.correct_answer}`
     );
     setAnswered(true);
     setAnswer("");
@@ -114,19 +114,18 @@ function QuizRoom() {
     setMessage("");
   };
 
+
   if (!quiz.started) {
     return (
-      <div className="container mt-5">
+      <div className="container py-5">
         <h2 className="mb-4">🎮 Quiz Room</h2>
-        <div className="mb-3">
-          <input
-            className="form-control"
-            value={roomId}
-            onChange={(e) => setRoomId(e.target.value)}
-            placeholder="Enter Room ID"
-          />
-        </div>
-        <div className="d-flex gap-2 mb-3">
+        <input
+          className="form-control mb-3"
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value)}
+          placeholder="Enter Room ID"
+        />
+        <div className="d-flex flex-wrap gap-2 mb-3">
           <button className="btn btn-primary" onClick={handleJoin}>
             Join Room
           </button>
@@ -141,7 +140,7 @@ function QuizRoom() {
           </button>
         </div>
         {players.length > 0 && (
-          <div className="mb-3">
+          <>
             <p>
               <strong>Players:</strong>{" "}
               {players.map((p) => p.username).join(", ")}
@@ -149,57 +148,57 @@ function QuizRoom() {
             <button className="btn btn-warning" onClick={handleStartQuiz}>
               Start Quiz
             </button>
-          </div>
+          </>
         )}
       </div>
     );
   }
 
   return (
-    <div className="container mt-5">
+    <div className="container py-5">
       <h2 className="mb-4">🧠 Quiz In Progress</h2>
-      <div className="mb-3">
-        <p>
-          <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
-        </p>
-        <p>
-          <strong>Time Left:</strong> {quiz.timeLeft}s
-        </p>
-        <p>
-          <strong>Scores:</strong>{" "}
-          {Object.entries(scores)
-            .map(([u, s]) => `${u}: ${s}`)
-            .join(", ")}
-        </p>
-        <p>
-          <strong>
-            Q{quiz.currentQuestion}/{quiz.totalQuestions}:
-          </strong>{" "}
-          {quiz.question?.question}
-        </p>
-      </div>
-      <div className="mb-3">
-        {quiz.question?.options.map((ans, i) => (
-          <button
-            key={i}
-            onClick={() => setAnswer(ans)}
-            disabled={answered}
-            className={`btn btn-outline-primary w-100 mb-2 ${
-              answer === ans ? "active" : ""
-            }`}
-          >
-            {ans}
-          </button>
-        ))}
+      <p>
+        <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
+      </p>
+      <p>
+        <strong>Time Left:</strong> {quiz.timeLeft}s
+      </p>
+      <p>
+        <strong>Scores:</strong>{" "}
+        {Object.entries(scores)
+          .map(([u, s]) => `${u}: ${s}`)
+          .join(", ")}
+      </p>
+      <p>
+        <strong>
+          Q{quiz.currentQuestion}/{quiz.totalQuestions}:
+        </strong>{" "}
+        {quiz.question?.question}
+      </p>
+
+      {quiz.question?.options.map((ans, i) => (
         <button
-          className="btn btn-success w-100"
-          onClick={handleAnswerSubmit}
-          disabled={!answer || answered}
+          key={i}
+          onClick={() => setAnswer(ans)}
+          disabled={answered}
+          className={`btn btn-outline-primary w-100 mb-2 ${
+            answer === ans ? "active" : ""
+          }`}
         >
-          Submit Answer
+          {ans}
         </button>
-        {feedback && <div className="alert alert-info mt-3">{feedback}</div>}
-      </div>
+      ))}
+
+      <button
+        className="btn btn-success w-100"
+        onClick={handleAnswerSubmit}
+        disabled={!answer || answered}
+      >
+        Submit Answer
+      </button>
+
+      {feedback && <div className="alert alert-info mt-3">{feedback}</div>}
+
       <div className="card mt-4">
         <div className="card-body">
           <h4 className="card-title">💬 Chat</h4>
