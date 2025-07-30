@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef, useMemo } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import socket from "../services/socket";
 import api from "../services/api";
@@ -11,65 +11,53 @@ function QuizRoom() {
 
   const [roomId, setRoomId] = useState(localStorage.getItem("roomId") || "");
   const [players, setPlayers] = useState([]);
-  const [question, setQuestion] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [quiz, setQuiz] = useState({
+    question: null,
+    timeLeft: 0,
+    currentQuestion: 0,
+    totalQuestions: 0,
+    started: false,
+  });
   const [scores, setScores] = useState({});
   const [answer, setAnswer] = useState("");
   const [answered, setAnswered] = useState(false);
-  const [answerFeedback, setAnswerFeedback] = useState("");
-  const [correctAnswer, setCorrectAnswer] = useState("");
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [totalQuestions, setTotalQuestions] = useState(0);
-  const [quizStarted, setQuizStarted] = useState(false);
+  const [feedback, setFeedback] = useState("");
+
 
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
 
-  const inputRef = useRef(null);
-  const chatEndRef = useRef(null);
-
-  const shuffledAnswers = useMemo(() => question?.options || [], [question]);
-
-  // Auto scroll chat
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    if (!user) navigate("/login");
+  }, [user, navigate]);
 
-  // Join or rejoin room
   useEffect(() => {
-    if (!user) return navigate("/login");
     if (!roomId) return;
 
-    const handleConnect = () => {
+    socket.on("connect", () => {
       socket.emit("rejoinRoom", { roomId, username: user.username });
-    };
-
-    if (socket.connected) {
-      handleConnect();
-    } else {
-      socket.once("connect", handleConnect);
-    }
+    });
 
     socket.on("playerUpdate", (data) => setPlayers(data.players));
     socket.on("scoreUpdate", setScores);
-    socket.on("receiveMessage", (msgOrList) => {
-      setMessages((prev) =>
-        Array.isArray(msgOrList) ? msgOrList : [...prev, msgOrList]
-      );
+    socket.on("receiveMessage", (msg) => {
+      setMessages((prev) => [...prev, msg]);
     });
-
     socket.on("startQuiz", (data) => {
-      setQuizStarted(true);
-      setQuestion(data.question);
-      setTimeLeft(data.timeLeft);
-      setCurrentQuestion(data.currentQuestion);
-      setTotalQuestions(data.totalQuestions);
+      setQuiz({
+        question: data.question,
+        timeLeft: data.timeLeft,
+        currentQuestion: data.currentQuestion,
+        totalQuestions: data.totalQuestions,
+        started: true,
+      });
       setAnswer("");
       setAnswered(false);
-      setAnswerFeedback("");
+      setFeedback("");
     });
-
-    socket.on("timerUpdate", (data) => setTimeLeft(data.timeLeft));
+    socket.on("timerUpdate", (data) =>
+      setQuiz((prev) => ({ ...prev, timeLeft: data.timeLeft }))
+    );
     socket.on("quizEnd", (data) => {
       localStorage.removeItem("roomId");
       api.post("/quiz/match", { roomId, players, scores: data.scores });
@@ -77,6 +65,7 @@ function QuizRoom() {
     });
 
     return () => {
+      socket.off("connect");
       socket.off("playerUpdate");
       socket.off("scoreUpdate");
       socket.off("receiveMessage");
@@ -104,19 +93,19 @@ function QuizRoom() {
   };
 
   const handleAnswerSubmit = () => {
-    const timeTaken = (15 - timeLeft) * 1000;
+    if (!answer || answered) return;
+    const timeTaken = (15 - quiz.timeLeft) * 1000;
     socket.emit("submitAnswer", { roomId, answer, timeTaken });
 
-    const correct = question.correct_answer.trim().toLowerCase();
-    const selected = answer.trim().toLowerCase();
-
-    setCorrectAnswer(question.correct_answer);
-    setAnswered(true);
-    setAnswerFeedback(
-      selected === correct
-        ? "✅ Correct!"
-        : `❌ Wrong! Correct: ${question.correct_answer}`
+    const isCorrect =
+      answer.trim().toLowerCase() ===
+      quiz.question.correct_answer.trim().toLowerCase();
+    setFeedback(
+      isCorrect
+        ? " Correct!"
+        : ` Wrong! Correct: ${quiz.question.correct_answer}`
     );
+    setAnswered(true);
     setAnswer("");
   };
 
@@ -125,10 +114,9 @@ function QuizRoom() {
     if (!message.trim()) return;
     socket.emit("sendMessage", { roomId, message, username: user.username });
     setMessage("");
-    inputRef.current?.focus();
   };
 
-  if (!quizStarted) {
+  if (!quiz.started) {
     return (
       <div className="container">
         <h2>Quiz Room</h2>
@@ -158,26 +146,25 @@ function QuizRoom() {
   return (
     <div className="container">
       <h2>Quiz In Progress</h2>
-      <div>
+      <p>
         <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
-      </div>
-      <div>
-        <strong>Time Left:</strong> {timeLeft}s
-      </div>
-      <div>
+      </p>
+      <p>
+        <strong>Time Left:</strong> {quiz.timeLeft}s
+      </p>
+      <p>
         <strong>Scores:</strong>{" "}
         {Object.entries(scores)
           .map(([u, s]) => `${u}: ${s}`)
           .join(", ")}
-      </div>
+      </p>
       <p>
         <strong>
-          Q{currentQuestion}/{totalQuestions}:
+          Q{quiz.currentQuestion}/{quiz.totalQuestions}:
         </strong>{" "}
-        {question?.question}
+        {quiz.question?.question}
       </p>
-
-      {shuffledAnswers.map((ans, i) => (
+      {quiz.question?.options.map((ans, i) => (
         <button
           key={i}
           onClick={() => setAnswer(ans)}
@@ -192,13 +179,10 @@ function QuizRoom() {
           {ans}
         </button>
       ))}
-
       <button onClick={handleAnswerSubmit} disabled={!answer || answered}>
         Submit Answer
       </button>
-
-      {answerFeedback && <p>{answerFeedback}</p>}
-
+      {feedback && <p>{feedback}</p>}
       <div>
         <h3>Chat</h3>
         <ul>
@@ -208,14 +192,9 @@ function QuizRoom() {
               <small>{new Date(msg.timestamp).toLocaleTimeString()}</small>
             </li>
           ))}
-          <div ref={chatEndRef} />
         </ul>
         <form onSubmit={sendMessage}>
-          <input
-            ref={inputRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
+          <input value={message} onChange={(e) => setMessage(e.target.value)} />
           <button type="submit">Send</button>
         </form>
       </div>
