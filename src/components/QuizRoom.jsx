@@ -22,8 +22,6 @@ function QuizRoom() {
   const [answer, setAnswer] = useState("");
   const [answered, setAnswered] = useState(false);
   const [feedback, setFeedback] = useState("");
-
-
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
 
@@ -102,8 +100,8 @@ function QuizRoom() {
       quiz.question.correct_answer.trim().toLowerCase();
     setFeedback(
       isCorrect
-        ? " Correct!"
-        : ` Wrong! Correct: ${quiz.question.correct_answer}`
+        ? "✅ Correct!"
+        : `❌ Wrong! Correct: ${quiz.question.correct_answer}`
     );
     setAnswered(true);
     setAnswer("");
@@ -118,85 +116,115 @@ function QuizRoom() {
 
   if (!quiz.started) {
     return (
-      <div className="container">
-        <h2>Quiz Room</h2>
-        <input
-          value={roomId}
-          onChange={(e) => setRoomId(e.target.value)}
-          placeholder="Enter Room ID"
-        />
-        <button onClick={handleJoin}>Join Room</button>
-        <button onClick={handleCreateRoom}>Create Room</button>
-        <button onClick={() => navigator.clipboard.writeText(roomId)}>
-          Copy Room ID
-        </button>
+      <div className="container mt-5">
+        <h2 className="mb-4">🎮 Quiz Room</h2>
+        <div className="mb-3">
+          <input
+            className="form-control"
+            value={roomId}
+            onChange={(e) => setRoomId(e.target.value)}
+            placeholder="Enter Room ID"
+          />
+        </div>
+        <div className="d-flex gap-2 mb-3">
+          <button className="btn btn-primary" onClick={handleJoin}>
+            Join Room
+          </button>
+          <button className="btn btn-success" onClick={handleCreateRoom}>
+            Create Room
+          </button>
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() => navigator.clipboard.writeText(roomId)}
+          >
+            Copy Room ID
+          </button>
+        </div>
         {players.length > 0 && (
-          <>
+          <div className="mb-3">
             <p>
               <strong>Players:</strong>{" "}
               {players.map((p) => p.username).join(", ")}
             </p>
-            <button onClick={handleStartQuiz}>Start Quiz</button>
-          </>
+            <button className="btn btn-warning" onClick={handleStartQuiz}>
+              Start Quiz
+            </button>
+          </div>
         )}
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <h2>Quiz In Progress</h2>
-      <p>
-        <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
-      </p>
-      <p>
-        <strong>Time Left:</strong> {quiz.timeLeft}s
-      </p>
-      <p>
-        <strong>Scores:</strong>{" "}
-        {Object.entries(scores)
-          .map(([u, s]) => `${u}: ${s}`)
-          .join(", ")}
-      </p>
-      <p>
-        <strong>
-          Q{quiz.currentQuestion}/{quiz.totalQuestions}:
-        </strong>{" "}
-        {quiz.question?.question}
-      </p>
-      {quiz.question?.options.map((ans, i) => (
+    <div className="container mt-5">
+      <h2 className="mb-4">🧠 Quiz In Progress</h2>
+      <div className="mb-3">
+        <p>
+          <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
+        </p>
+        <p>
+          <strong>Time Left:</strong> {quiz.timeLeft}s
+        </p>
+        <p>
+          <strong>Scores:</strong>{" "}
+          {Object.entries(scores)
+            .map(([u, s]) => `${u}: ${s}`)
+            .join(", ")}
+        </p>
+        <p>
+          <strong>
+            Q{quiz.currentQuestion}/{quiz.totalQuestions}:
+          </strong>{" "}
+          {quiz.question?.question}
+        </p>
+      </div>
+      <div className="mb-3">
+        {quiz.question?.options.map((ans, i) => (
+          <button
+            key={i}
+            onClick={() => setAnswer(ans)}
+            disabled={answered}
+            className={`btn btn-outline-primary w-100 mb-2 ${
+              answer === ans ? "active" : ""
+            }`}
+          >
+            {ans}
+          </button>
+        ))}
         <button
-          key={i}
-          onClick={() => setAnswer(ans)}
-          disabled={answered}
-          style={{
-            backgroundColor: answer === ans ? "#add8e6" : "",
-            marginBottom: "5px",
-            display: "block",
-            width: "100%",
-          }}
+          className="btn btn-success w-100"
+          onClick={handleAnswerSubmit}
+          disabled={!answer || answered}
         >
-          {ans}
+          Submit Answer
         </button>
-      ))}
-      <button onClick={handleAnswerSubmit} disabled={!answer || answered}>
-        Submit Answer
-      </button>
-      {feedback && <p>{feedback}</p>}
-      <div>
-        <h3>Chat</h3>
-        <ul>
-          {messages.map((msg, i) => (
-            <li key={i}>
-              <strong>{msg.username}</strong>: {msg.message}{" "}
-              <small>{new Date(msg.timestamp).toLocaleTimeString()}</small>
-            </li>
-          ))}
-        </ul>
-        <form onSubmit={sendMessage}>
-          <input value={message} onChange={(e) => setMessage(e.target.value)} />
-          <button type="submit">Send</button>
-        </form>
+        {feedback && <div className="alert alert-info mt-3">{feedback}</div>}
+      </div>
+      <div className="card mt-4">
+        <div className="card-body">
+          <h4 className="card-title">💬 Chat</h4>
+          <ul className="list-group mb-3">
+            {messages.map((msg, i) => (
+              <li key={i} className="list-group-item">
+                <strong>{msg.username}</strong>: {msg.message}{" "}
+                <small className="text-muted float-end">
+                  {new Date(msg.timestamp).toLocaleTimeString()}
+                </small>
+              </li>
+            ))}
+          </ul>
+          <form onSubmit={sendMessage} className="d-flex gap-2">
+            <input
+              className="form-control"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type a message..."
+            />
+            <button className="btn btn-primary" type="submit">
+              Send
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -17,16 +17,34 @@ function Results() {
   const goBack = () => navigate("/quiz");
 
   return (
-    <div className="container">
-      <h2>🏆 Quiz Results</h2>
-      <ul>
-        {Object.entries(scores).map(([username, score]) => (
-          <li key={username}>
-            {username}: {score} points
-          </li>
-        ))}
-      </ul>
-      <button onClick={goBack}>🔁 Back to Quiz</button>
+    <div className="container mt-5">
+      <div className="card shadow">
+        <div className="card-body">
+          <h2 className="card-title text-center mb-4">🏆 Quiz Results</h2>
+          {players.length > 0 ? (
+            <ul className="list-group mb-4">
+              {Object.entries(scores).map(([username, score]) => (
+                <li
+                  key={username}
+                  className="list-group-item d-flex justify-content-between align-items-center"
+                >
+                  <strong>{username}</strong>
+                  <span className="badge bg-primary rounded-pill">
+                    {score} pts
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted text-center">No results to display.</p>
+          )}
+          <div className="text-center">
+            <button className="btn btn-outline-secondary" onClick={goBack}>
+              🔁 Back to Quiz
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

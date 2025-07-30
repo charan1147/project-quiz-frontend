@@ -36,38 +36,65 @@ function Register() {
   };
 
   return (
-    <div className="container">
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-          autoComplete="username"
-          required
-        />
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          autoComplete="email"
-          required
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          autoComplete="new-password"
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
-        {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
-      </form>
+    <div className="container mt-5">
+      <div className="row justify-content-center">
+        <div className="col-md-6">
+          <div className="card shadow">
+            <div className="card-body">
+              <h2 className="card-title text-center mb-4">📝 Register</h2>
+              <form onSubmit={handleSubmit}>
+                <div className="mb-3">
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username"
+                    autoComplete="username"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="email"
+                    className="form-control"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Email"
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+                <div className="mb-3">
+                  <input
+                    type="password"
+                    className="form-control"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Password"
+                    autoComplete="new-password"
+                    required
+                  />
+                </div>
+                <div className="d-grid">
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={loading}
+                  >
+                    {loading ? "Registering..." : "Register"}
+                  </button>
+                </div>
+                {errorMsg && (
+                  <div className="alert alert-danger mt-3" role="alert">
+                    {errorMsg}
+                  </div>
+                )}
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
