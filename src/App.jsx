@@ -1,22 +1,18 @@
 import React, { useContext } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import Profile from "./components/Profile";
 import QuizRoom from "./components/QuizRoom";
 import Results from "./components/Results";
+import Home from "./components/Home";
 import ProtectedRoute from "./components/ProtectedRoute";
 import "./App.css";
 
 function App() {
   const { user, logout, loading } = useContext(AuthContext);
+
   if (loading) return <div className="text-center mt-5">Loading...</div>;
 
   return (
@@ -76,6 +72,7 @@ function App() {
 
         <div className="container mt-4">
           <Routes>
+            <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route
@@ -102,12 +99,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/"
-              element={
-                user ? <Navigate to="/quiz" /> : <Navigate to="/login" />
-              }
-            />
+            <Route path="*" element={<Link to="/" replace />} />
           </Routes>
         </div>
       </div>

@@ -21,7 +21,7 @@ function Register() {
       await register(username, email, password);
       localStorage.removeItem("roomId");
       localStorage.removeItem("username");
-      navigate("/quiz");
+      navigate("/");
     } catch (error) {
       setErrorMsg(error.message || "Registration failed");
     } finally {

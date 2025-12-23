@@ -18,7 +18,7 @@ function Login() {
 
     try {
       await login(identifier, password);
-      navigate("/quiz");
+      navigate("/");
     } catch (error) {
       setErrorMsg(error.message || "Login failed. Please try again.");
     } finally {
