@@ -16,7 +16,7 @@ function Home() {
 
   return (
     <div className="container text-center py-5">
-      <h1 className="display-4 fw-bold mb-4">Welcome to Quiz App! 🚀</h1>
+      <h1 className="display-4 fw-bold mb-4">Welcome to Coading Quiz App! </h1>
       <p className="lead mb-5 text-muted">
         Challenge your friends in real-time multiplayer quizzes. Create a room,
         share the code, and compete live!
