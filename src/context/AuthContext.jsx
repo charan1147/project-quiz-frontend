@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect } from "react";
+import { createContext, useEffect, useState } from "react";
 import api from "../services/api";
 
 export const AuthContext = createContext();
@@ -7,48 +7,40 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUser = async () => {
+    try {
+      const { data } = await api.get("/auth/getme");
+      setUser(data);
+    } catch {
+      localStorage.removeItem("token");
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) return setLoading(false);
-
-    const fetchProfile = async () => {
-      try {
-        const res = await api.get("/auth/getme");
-        setUser(res.data);
-      } catch (err) {
-        setUser(null);
-        localStorage.removeItem("token");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+    localStorage.getItem("token") ? fetchUser() : setLoading(false);
   }, []);
 
   const login = async (identifier, password) => {
-    const res = await api.post("/auth/login", { identifier, password });
-    const token = res.data.token;
-    localStorage.setItem("token", token);
-
-    const profile = await api.get("/auth/getme"); 
-    setUser(profile.data);
+    const { data } = await api.post("/auth/login", { identifier, password });
+    localStorage.setItem("token", data.token);
+    await fetchUser();
   };
 
-  const logout = async () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("roomId");
-    localStorage.removeItem("username");
+  const register = async (u, e, p) => {
+    await api.post("/auth/register", { username: u, email: e, password: p });
+    await login(u, p);
+  };
+
+  const logout = () => {
+    ["token", "roomId", "username"].forEach((k) => localStorage.removeItem(k));
     setUser(null);
   };
 
-  const register = async (username, email, password) => {
-    await api.post("/auth/register", { username, email, password });
-    await login(username, password);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, login, logout, register, loading }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

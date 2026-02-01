@@ -1,5 +1,11 @@
 import React, { useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Link,
+  Navigate,
+} from "react-router-dom";
 import { AuthContext } from "./context/AuthContext";
 import Login from "./components/Login";
 import Register from "./components/Register";
@@ -15,6 +21,46 @@ function App() {
 
   if (loading) return <div className="text-center mt-5">Loading...</div>;
 
+  const AuthLinks = () => (
+    <>
+      <li className="nav-item">
+        <Link className="nav-link" to="/profile">
+          Profile
+        </Link>
+      </li>
+      <li className="nav-item">
+        <Link className="nav-link" to="/quiz">
+          Join Quiz
+        </Link>
+      </li>
+      <li className="nav-item">
+        <Link className="nav-link" to="/results">
+          Results
+        </Link>
+      </li>
+      <li className="nav-item">
+        <button className="btn btn-outline-light ms-2" onClick={logout}>
+          Logout
+        </button>
+      </li>
+    </>
+  );
+
+  const GuestLinks = () => (
+    <>
+      <li className="nav-item">
+        <Link className="nav-link" to="/login">
+          Login
+        </Link>
+      </li>
+      <li className="nav-item">
+        <Link className="nav-link" to="/register">
+          Register
+        </Link>
+      </li>
+    </>
+  );
+
   return (
     <Router>
       <div className="App">
@@ -25,46 +71,7 @@ function App() {
             </Link>
             <div className="collapse navbar-collapse">
               <ul className="navbar-nav ms-auto">
-                {!user ? (
-                  <>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/login">
-                        Login
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/register">
-                        Register
-                      </Link>
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/profile">
-                        Profile
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/quiz">
-                        Join Quiz
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <Link className="nav-link" to="/results">
-                        Results
-                      </Link>
-                    </li>
-                    <li className="nav-item">
-                      <button
-                        className="btn btn-outline-light ms-2"
-                        onClick={logout}
-                      >
-                        Logout
-                      </button>
-                    </li>
-                  </>
-                )}
+                {user ? <AuthLinks /> : <GuestLinks />}
               </ul>
             </div>
           </div>
@@ -99,7 +106,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="*" element={<Link to="/" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </div>

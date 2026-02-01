@@ -1,9 +1,17 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
 import { AuthContext } from "../context/AuthContext";
 import socket from "../services/socket";
 import api from "../services/api";
-import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid";
+
+const initialQuiz = {
+  question: null,
+  timeLeft: 0,
+  currentQuestion: 0,
+  totalQuestions: 0,
+  started: false,
+};
 
 function QuizRoom() {
   const { user } = useContext(AuthContext);
@@ -11,13 +19,7 @@ function QuizRoom() {
 
   const [roomId, setRoomId] = useState(localStorage.getItem("roomId") || "");
   const [players, setPlayers] = useState([]);
-  const [quiz, setQuiz] = useState({
-    question: null,
-    timeLeft: 0,
-    currentQuestion: 0,
-    totalQuestions: 0,
-    started: false,
-  });
+  const [quiz, setQuiz] = useState(initialQuiz);
   const [scores, setScores] = useState({});
   const [answer, setAnswer] = useState("");
   const [answered, setAnswered] = useState(false);
@@ -30,78 +32,62 @@ function QuizRoom() {
   }, [user, navigate]);
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || !user) return;
 
-    socket.on("connect", () => {
-      socket.emit("rejoinRoom", { roomId, username: user.username });
-    });
+    socket.emit("rejoinRoom", { roomId, username: user.username });
 
-    socket.on("playerUpdate", (data) => setPlayers(data.players));
+    socket.on("playerUpdate", ({ players }) => setPlayers(players));
     socket.on("scoreUpdate", setScores);
-    socket.on("receiveMessage", (msg) => {
-      setMessages((prev) => [...prev, msg]);
-    });
+    socket.on("receiveMessage", (msg) => setMessages((prev) => [...prev, msg]));
+
     socket.on("startQuiz", (data) => {
-      setQuiz({
-        question: data.question,
-        timeLeft: data.timeLeft,
-        currentQuestion: data.currentQuestion,
-        totalQuestions: data.totalQuestions,
-        started: true,
-      });
+      setQuiz({ ...data, started: true });
       setAnswer("");
       setAnswered(false);
       setFeedback("");
     });
-    socket.on("timerUpdate", (data) =>
-      setQuiz((prev) => ({ ...prev, timeLeft: data.timeLeft }))
+
+    socket.on("timerUpdate", ({ timeLeft }) =>
+      setQuiz((q) => ({ ...q, timeLeft })),
     );
-    socket.on("quizEnd", (data) => {
+
+    socket.on("quizEnd", ({ scores }) => {
       localStorage.removeItem("roomId");
-      api.post("/quiz/match", { roomId, players, scores: data.scores });
-      navigate("/results", { state: { scores: data.scores, players } });
+      api.post("/quiz/match", { roomId, players, scores });
+      navigate("/results", { state: { scores, players } });
     });
 
-    return () => {
-      socket.off("connect");
-      socket.off("playerUpdate");
-      socket.off("scoreUpdate");
-      socket.off("receiveMessage");
-      socket.off("startQuiz");
-      socket.off("timerUpdate");
-      socket.off("quizEnd");
-    };
-  }, [roomId, user, navigate]);
+    return () => socket.removeAllListeners();
+  }, [roomId, user, navigate, players]);
 
-  const handleJoin = () => {
-    if (!roomId || !user?.username) return;
+  const joinRoom = () => {
+    if (!roomId) return;
     localStorage.setItem("roomId", roomId);
     socket.emit("joinRoom", { roomId, username: user.username });
   };
 
-  const handleCreateRoom = () => {
-    const newId = uuidv4().slice(0, 8);
-    setRoomId(newId);
-    localStorage.setItem("roomId", newId);
-    socket.emit("createRoom", { roomId: newId, username: user.username });
+  const createRoom = () => {
+    const id = uuidv4().slice(0, 8);
+    setRoomId(id);
+    localStorage.setItem("roomId", id);
+    socket.emit("createRoom", { roomId: id, username: user.username });
   };
 
-  const handleStartQuiz = () => {
-    socket.emit("startQuizManually", { roomId });
-  };
-
-  const handleAnswerSubmit = () => {
+  const submitAnswer = () => {
     if (!answer || answered) return;
-    const timeTaken = (15 - quiz.timeLeft) * 1000;
-    socket.emit("submitAnswer", { roomId, answer, timeTaken });
 
-    const isCorrect =
+    socket.emit("submitAnswer", {
+      roomId,
+      answer,
+      timeTaken: (15 - quiz.timeLeft) * 1000,
+    });
+
+    const correct =
       answer.trim().toLowerCase() ===
       quiz.question.correct_answer.trim().toLowerCase();
+
     setFeedback(
-      isCorrect
-        ? " Correct!"
-        : `Wrong! Correct: ${quiz.question.correct_answer}`
+      correct ? "Correct!" : `Wrong! Correct: ${quiz.question.correct_answer}`,
     );
     setAnswered(true);
     setAnswer("");
@@ -114,38 +100,43 @@ function QuizRoom() {
     setMessage("");
   };
 
-
   if (!quiz.started) {
     return (
       <div className="container py-5">
-        <h2 className="mb-4"> Quiz Room</h2>
+        <h2>Quiz Room</h2>
+
         <input
           className="form-control mb-3"
           value={roomId}
           onChange={(e) => setRoomId(e.target.value)}
           placeholder="Enter Room ID"
         />
-        <div className="d-flex flex-wrap gap-2 mb-3">
-          <button className="btn btn-primary" onClick={handleJoin}>
-            Join Room
+
+        <div className="d-flex gap-2 mb-3">
+          <button className="btn btn-primary" onClick={joinRoom}>
+            Join
           </button>
-          <button className="btn btn-success" onClick={handleCreateRoom}>
-            Create Room
+          <button className="btn btn-success" onClick={createRoom}>
+            Create
           </button>
           <button
             className="btn btn-outline-secondary"
             onClick={() => navigator.clipboard.writeText(roomId)}
           >
-            Copy Room ID
+            Copy ID
           </button>
         </div>
-        {players.length > 0 && (
+
+        {!!players.length && (
           <>
             <p>
               <strong>Players:</strong>{" "}
               {players.map((p) => p.username).join(", ")}
             </p>
-            <button className="btn btn-warning" onClick={handleStartQuiz}>
+            <button
+              className="btn btn-warning"
+              onClick={() => socket.emit("startQuizManually", { roomId })}
+            >
               Start Quiz
             </button>
           </>
@@ -156,7 +147,8 @@ function QuizRoom() {
 
   return (
     <div className="container py-5">
-      <h2 className="mb-4"> Quiz In Progress</h2>
+      <h2>Quiz In Progress</h2>
+
       <p>
         <strong>Players:</strong> {players.map((p) => p.username).join(", ")}
       </p>
@@ -169,6 +161,7 @@ function QuizRoom() {
           .map(([u, s]) => `${u}: ${s}`)
           .join(", ")}
       </p>
+
       <p>
         <strong>
           Q{quiz.currentQuestion}/{quiz.totalQuestions}:
@@ -176,23 +169,21 @@ function QuizRoom() {
         {quiz.question?.question}
       </p>
 
-      {quiz.question?.options.map((ans, i) => (
+      {quiz.question?.options.map((opt, i) => (
         <button
           key={i}
-          onClick={() => setAnswer(ans)}
+          className={`btn btn-outline-primary w-100 mb-2 ${answer === opt ? "active" : ""}`}
           disabled={answered}
-          className={`btn btn-outline-primary w-100 mb-2 ${
-            answer === ans ? "active" : ""
-          }`}
+          onClick={() => setAnswer(opt)}
         >
-          {ans}
+          {opt}
         </button>
       ))}
 
       <button
         className="btn btn-success w-100"
-        onClick={handleAnswerSubmit}
         disabled={!answer || answered}
+        onClick={submitAnswer}
       >
         Submit Answer
       </button>
@@ -201,17 +192,19 @@ function QuizRoom() {
 
       <div className="card mt-4">
         <div className="card-body">
-          <h4 className="card-title">💬 Chat</h4>
+          <h4>💬 Chat</h4>
+
           <ul className="list-group mb-3">
-            {messages.map((msg, i) => (
+            {messages.map((m, i) => (
               <li key={i} className="list-group-item">
-                <strong>{msg.username}</strong>: {msg.message}{" "}
-                <small className="text-muted float-end">
-                  {new Date(msg.timestamp).toLocaleTimeString()}
+                <strong>{m.username}</strong>: {m.message}
+                <small className="float-end text-muted">
+                  {new Date(m.timestamp).toLocaleTimeString()}
                 </small>
               </li>
             ))}
           </ul>
+
           <form onSubmit={sendMessage} className="d-flex gap-2">
             <input
               className="form-control"
@@ -219,9 +212,7 @@ function QuizRoom() {
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type a message..."
             />
-            <button className="btn btn-primary" type="submit">
-              Send
-            </button>
+            <button className="btn btn-primary">Send</button>
           </form>
         </div>
       </div>

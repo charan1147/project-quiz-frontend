@@ -1,28 +1,22 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-function Results() {
+export default function Results() {
   const [scores, setScores] = useState({});
-  const [players, setPlayers] = useState([]);
   const navigate = useNavigate();
-  const location = useLocation();
+  const { state } = useLocation();
+  const players = state?.players || [];
 
   useEffect(() => {
-    const stateScores = location.state?.scores || {};
-    const statePlayers = location.state?.players || [];
-    setScores(stateScores);
-    setPlayers(statePlayers);
-  }, [location]);
-
-  const goBack = () => navigate("/quiz");
+    setScores(state?.scores || {});
+  }, [state]);
 
   return (
     <div className="container d-flex justify-content-center align-items-center vh-100">
-      <div
-        className="card shadow p-4"
-      >
-        <h2 className="text-center mb-4"> Quiz Results</h2>
-        {players.length > 0 ? (
+      <div className="card shadow p-4" style={{ maxWidth: 400, width: "100%" }}>
+        <h2 className="text-center mb-4">Quiz Results</h2>
+
+        {players.length ? (
           <ul className="list-group mb-4">
             {Object.entries(scores).map(([username, score]) => (
               <li
@@ -39,12 +33,14 @@ function Results() {
         ) : (
           <p className="text-muted text-center">No results to display.</p>
         )}
-        <button className="btn btn-outline-secondary w-100" onClick={goBack}>
-           Back to Quiz
+
+        <button
+          className="btn btn-outline-secondary w-100"
+          onClick={() => navigate("/quiz")}
+        >
+          Back to Quiz
         </button>
       </div>
     </div>
   );
 }
-
-export default Results;

@@ -1,85 +1,73 @@
-import React, { useState, useContext } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-function Register() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+export default function Register() {
+  const [form, setForm] = useState({ username: "", email: "", password: "" });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMsg("");
     setLoading(true);
+    setError("");
 
     try {
-      await register(username, email, password);
-      localStorage.removeItem("roomId");
-      localStorage.removeItem("username");
+      await register(form.username, form.email, form.password);
+      ["roomId", "username"].forEach((k) => localStorage.removeItem(k));
       navigate("/");
-    } catch (error) {
-      setErrorMsg(error.message || "Registration failed");
+    } catch {
+      setError("Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center ">
-      <div
+    <div className="container d-flex justify-content-center align-items-center">
+      <form
+        onSubmit={handleSubmit}
         className="card p-4 shadow"
-        style={{ maxWidth: "400px", width: "100%" }}
+        style={{ maxWidth: 400, width: "100%" }}
       >
-        <h2 className="text-center mb-4"> Register</h2>
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className="form-control mb-3"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Username"
-            autoComplete="username"
-            required
-          />
-          <input
-            type="email"
-            className="form-control mb-3"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email"
-            autoComplete="email"
-            required
-          />
-          <input
-            type="password"
-            className="form-control mb-3"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            autoComplete="new-password"
-            required
-          />
-          <button
-            type="submit"
-            className="btn btn-primary w-100"
-            disabled={loading}
-          >
-            {loading ? "Registering..." : "Register"}
-          </button>
-          {errorMsg && (
-            <div className="alert alert-danger mt-3" role="alert">
-              {errorMsg}
-            </div>
-          )}
-        </form>
-      </div>
+        <h2 className="text-center mb-4">Register</h2>
+
+        <input
+          name="username"
+          className="form-control mb-3"
+          placeholder="Username"
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="email"
+          type="email"
+          className="form-control mb-3"
+          placeholder="Email"
+          onChange={handleChange}
+          required
+        />
+        <input
+          name="password"
+          type="password"
+          className="form-control mb-3"
+          placeholder="Password"
+          onChange={handleChange}
+          required
+        />
+
+        <button className="btn btn-primary w-100" disabled={loading}>
+          {loading ? "Registering..." : "Register"}
+        </button>
+
+        {error && <div className="alert alert-danger mt-3">{error}</div>}
+      </form>
     </div>
   );
 }
-
-export default Register;

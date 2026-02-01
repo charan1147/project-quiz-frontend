@@ -1,26 +1,28 @@
-import React, { useState, useContext } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-function Login() {
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [loading, setLoading] = useState(false);
-
+const Login = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const [form, setForm] = useState({ identifier: "", password: "" });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (e) =>
+    setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrorMsg("");
+    setError("");
 
     try {
-      await login(identifier, password);
+      await login(form.identifier, form.password);
       navigate("/");
-    } catch (error) {
-      setErrorMsg(error.message || "Login failed. Please try again.");
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -28,43 +30,38 @@ function Login() {
 
   return (
     <div className="container d-flex justify-content-center align-items-center">
-      <div
-        className="card p-4 shadow"
-      >
-        <h2 className="text-center mb-4"> Login</h2>
+      <div className="card p-4 shadow">
+        <h2 className="text-center mb-4">Login</h2>
+
         <form onSubmit={handleSubmit}>
           <input
-            type="text"
+            name="identifier"
             className="form-control mb-3"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
             placeholder="Username or Email"
+            value={form.identifier}
+            onChange={handleChange}
             required
           />
+
           <input
             type="password"
+            name="password"
             className="form-control mb-3"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
             required
           />
-          <button
-            type="submit"
-            className="btn btn-primary w-100"
-            disabled={loading}
-          >
+
+          <button className="btn btn-primary w-100" disabled={loading}>
             {loading ? "Logging in..." : "Login"}
           </button>
-          {errorMsg && (
-            <div className="alert alert-danger mt-3" role="alert">
-              {errorMsg}
-            </div>
-          )}
+
+          {error && <div className="alert alert-danger mt-3">{error}</div>}
         </form>
       </div>
     </div>
   );
-}
+};
 
 export default Login;
