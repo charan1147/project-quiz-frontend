@@ -1,12 +1,46 @@
-# React + Vite
+A real-time multiplayer quiz application frontend built using React, Context API, and Socket.io.  
+Users can create or join quiz rooms, answer live questions, chat in real time, and view results instantly.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+-----------------------------------------------------------------------------------------------------------
+ Tech Stack
 
-Currently, two official plugins are available:
+- React
+- React Router DOM
+- Context API
+- Socket.io Client
+- Axios
+- Bootstrap
+-----------------------------------------------------------------------------------------------------------
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Authentication Flow
 
-## Expanding the ESLint configuration
+1. User register or login
+2. JWT token is stored in localStorage
+3. `/auth/getme` fetches user profile
+4. Auth state is managed via Context API
+5. Protected routes restrict access
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+-----------------------------------------------------------------------------------------------------------
+
+ Real-Time Quiz Flow
+
+- Create / Join quiz room
+- Real-time player updates
+- Quiz starts manually
+- Timer per question
+- Answer submission with scoring
+- Live chat during quiz
+- Results page after quiz ends
+
+-----------------------------------------------------------------------------------------------------------
+
+ Features
+
+- JWT Authentication
+- Protected Routes
+- Real-time multiplayer quiz
+- Live chat
+- Timer-based questions
+- Dynamic score calculation
+- create room and join room 
+
